@@ -55,7 +55,7 @@ module.exports = {
 
         if (!correctPassword) {
           errors.password = "password is incorrect";
-          throw new AuthenticationError("password is not correct", { errors });
+          throw new UserInputError("password is not correct", { errors });
         }
         const token = jwt.sign({ username }, JWT_SECRET, {
           expiresIn: 60 * 60,
@@ -107,7 +107,7 @@ module.exports = {
 
         return user;
       } catch (error) {
-        console.log(error);
+        // console.log(error);
         if (error.name === "SequelizeUniqueConstraintError") {
           error.errors.forEach(
             (e) => (errors[e.path] = `${e.path} is already taken`)
