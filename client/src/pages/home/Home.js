@@ -48,7 +48,7 @@ const Home = () => {
         },
       });
     }
-  });
+  }, [messageError, messageData]);
 
   return (
     <>
