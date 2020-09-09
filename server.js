@@ -5,11 +5,12 @@ const typeDefs = require("./graphql/typeDefs");
 
 // A map of functions which return data for the schema.
 const resolvers = require("./graphql/resolvers");
+const contextMiddleware = require("./utils/contextMiddleware");
 
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  context: (ctx) => ctx,
+  context: contextMiddleware,
 });
 
 server.listen().then(({ url }) => {

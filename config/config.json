@@ -1,8 +1,11 @@
 {
   "development": {
-    "dialect": "sqlite",
-    "storage":  "chat_database.db"
-},
+    "username": "root",
+    "password": "root",
+    "database": "chat_database",
+    "host": "127.0.0.1",
+    "dialect": "mysql"
+  },
   "test": {
     "username": "root",
     "password": null,

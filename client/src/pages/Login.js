@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Row, Col, Form, Button } from "react-bootstrap";
 import { gql, useLazyQuery } from "@apollo/client";
 import { Link } from "react-router-dom";
+import { useAuthDispatch } from "../context/auth";
 
 const LOGIN_USER = gql`
   query loginUser($username: String!, $password: String!) {
@@ -20,13 +21,14 @@ const Login = (props) => {
     password: "",
   });
   const [errors, setErrors] = useState({});
+  const dispatch = useAuthDispatch();
 
   const [loginUser, { loading }] = useLazyQuery(LOGIN_USER, {
     onError: (err) => {
       setErrors(err.graphQLErrors[0].extensions.errors);
     },
     onCompleted: (data) => {
-      localStorage.setItem("token", data.login.token);
+      dispatch({ type: "LOGIN", payload: data.login });
       props.history.push("/");
     },
   });
@@ -41,7 +43,7 @@ const Login = (props) => {
   return (
     <Row className="bg-white py-5 justify-content-center">
       <Col xs={8} sm={6} lg={5}>
-        <h1 className="text-center">Register</h1>
+        <h1 className="text-center">Login</h1>
         <Form onSubmit={submitHandler}>
           <Form.Group>
             <Form.Label>Username</Form.Label>

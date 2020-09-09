@@ -1,31 +1,49 @@
-const { User } = require("../models");
+const { Message, User } = require("../../models");
 const bcrypt = require("bcryptjs");
 const { UserInputError, AuthenticationError } = require("apollo-server");
 const jwt = require("jsonwebtoken");
-const { JWT_SECRET } = require("../config/env.json");
+const { JWT_SECRET } = require("../../config/env.json");
 const { Op } = require("sequelize");
+
 module.exports = {
   Query: {
-    getUsers: async (_, __, context) => {
-      // console.log(context.req.headers.authorization);
+    currentUser: async (_, __, { user }) => {
+      const me = await User.findOne({
+        where: {
+          username: user.username,
+        },
+      });
+
+      return me;
+    },
+    getUsers: async (_, __, { user }) => {
       try {
-        let user;
-        if (context.req && context.req.headers.authorization) {
-          const token = context.req.headers.authorization.split(" ")[1];
-          jwt.verify(token, JWT_SECRET, (err, decodedToken) => {
-            if (err) {
-              throw new AuthenticationError("Unauthenticated", err);
-            }
-            user = decodedToken;
-          });
-        }
-        const users = await User.findAll({
+        if (!user) throw new AuthenticationError("Unauthenticated");
+
+        let users = await User.findAll({
+          attributes: ["username", "imageUrl", "createdAt"],
           where: {
             username: {
               [Op.ne]: user.username,
             },
           },
         });
+
+        const allUsersMessage = await Message.findAll({
+          where: {
+            [Op.or]: [{ from: user.username }, { to: user.username }],
+          },
+          order: [["createdAt", "DESC"]],
+        });
+
+        users = users.map((otherUser) => {
+          const latestMessage = allUsersMessage.find(
+            (m) => m.from === otherUser.username || m.to === otherUser.username
+          );
+          otherUser.latestMessage = latestMessage;
+          return otherUser;
+        });
+
         return users;
       } catch (error) {
         console.log(error);
@@ -66,7 +84,7 @@ module.exports = {
         return {
           ...user.toJSON(),
           token,
-          createdAt: user.createdAt.toISOString(),
+          // createdAt: user.createdAt.toISOString(),
         };
       } catch (error) {
         console.log(error);
@@ -103,15 +121,14 @@ module.exports = {
           email,
           password,
         });
-        // return user
 
         return user;
       } catch (error) {
-        // console.log(error);
         if (error.name === "SequelizeUniqueConstraintError") {
-          error.errors.forEach(
-            (e) => (errors[e.path] = `${e.path} is already taken`)
-          );
+          error.errors.forEach((e) => {
+            key = e.path.split(".")[1];
+            errors[key] = `${key} is already taken`;
+          });
         }
         if (error.name === "SequelizeValidationError") {
           error.errors.forEach((e) => (errors[e.path] = e.message));

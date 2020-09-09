@@ -2,15 +2,40 @@ $blue: #1877f2;
 $green: #42b72a;
 
 $border-radius: 0;
+$paragraph-margin-bottom: 0;
 
 @import "~bootstrap/scss/bootstrap.scss";
 
 body {
-  min-height: 100vh;
+  height: 100vh;
   background: linear-gradient(
     203deg,
     rgba(131, 58, 180, 0.9) 0%,
     rgba(253, 29, 29, 0.9) 50%,
     rgba(252, 176, 69, 0.9) 100%
   );
+}
+
+.user-div:hover {
+  background-color: rgb(251, 251, 251);
+}
+
+.message-box {
+  height: 500px;
+  overflow-y: scroll;
+}
+
+.bg-gray {
+  background-color: rgb(240, 240, 240);
+}
+
+.user-image {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.message-input {
+  outline: none;
 }
