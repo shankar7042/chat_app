@@ -72,11 +72,13 @@ const Messages = () => {
 
   let chatMarkUp;
   if (!messages && !messageLoading) {
-    chatMarkUp = <p>Select a Friend</p>;
+    chatMarkUp = <p className="info">Select a Friend</p>;
   } else if (messageLoading) {
     chatMarkUp = <p>Loading...</p>;
   } else if (messages.length === 0) {
-    chatMarkUp = <p>You are now connected! Send the first message</p>;
+    chatMarkUp = (
+      <p className="info">You are now connected! Send the first message</p>
+    );
   } else if (messages.length > 0) {
     chatMarkUp = messages.map((msg, index) => (
       <Fragment key={msg.uuid}>
@@ -102,14 +104,18 @@ const Messages = () => {
       <div className="d-flex flex-column-reverse message-box">{chatMarkUp}</div>
       <div>
         <Form onSubmit={messageSubmitHandler}>
-          <Form.Group>
+          <Form.Group className="d-flex align-items-center mr-3">
             <Form.Control
               type="text"
-              placeholder="Type a message..."
+              placeholder="😎 Type a message..."
               className="rounded-pill bg-gray border-0 message-input"
               value={content}
               onChange={(e) => setContent(e.target.value)}
             />
+            <i
+              className="fas fa-paper-plane text-primary fa-2x ml-2"
+              onClick={messageSubmitHandler}
+            ></i>
           </Form.Group>
         </Form>
       </div>
