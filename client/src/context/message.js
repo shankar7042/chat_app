@@ -12,6 +12,7 @@ const messageReducer = (state, action) => {
         ...state,
         users: action.payload,
       };
+
     case "SET_USER_MESSAGES":
       usersCopy = [...state.users];
       userIndex = usersCopy.findIndex((u) => u.username === username);
@@ -22,6 +23,7 @@ const messageReducer = (state, action) => {
         ...state,
         users: usersCopy,
       };
+
     case "SET_SELECTED_USER":
       usersCopy = state.users.map((user) => ({
         ...user,
@@ -31,18 +33,23 @@ const messageReducer = (state, action) => {
         ...state,
         users: usersCopy,
       };
+
     case "ADD_MESSAGE":
       usersCopy = [...state.users];
       userIndex = usersCopy.findIndex((u) => u.username === username);
       const userWithNewMessage = {
         ...usersCopy[userIndex],
-        messages: [message, ...usersCopy[userIndex].messages],
+        messages: usersCopy[userIndex].messages
+          ? [message, ...usersCopy[userIndex].messages]
+          : null,
+        latestMessage: message,
       };
       usersCopy[userIndex] = userWithNewMessage;
       return {
         ...state,
         users: usersCopy,
       };
+
     default:
       throw new Error(`Unknown action type ${action.payload}`);
   }
