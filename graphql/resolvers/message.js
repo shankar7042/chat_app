@@ -1,8 +1,9 @@
-const { User, Message } = require("../../models");
+const { User, Message, Reaction } = require("../../models");
 const {
   UserInputError,
   AuthenticationError,
   withFilter,
+  ForbiddenError,
 } = require("apollo-server");
 const { Op } = require("sequelize");
 
@@ -59,6 +60,50 @@ module.exports = {
         throw error;
       }
     },
+    reactToMessage: async (_, { messageUuid, content }, { user, pubsub }) => {
+      const reactions = ["❤️", "😆", "😯", "😢", "😡", "👍", "👎"];
+      try {
+        if (!user) throw new AuthenticationError("Unauthenticated");
+
+        if (!reactions.includes(content))
+          throw new UserInputError("Invalid Reaction");
+
+        const username = user.username;
+        user = await User.findOne({ where: { username } });
+
+        const message = await Message.findOne({ where: { uuid: messageUuid } });
+        if (!message) throw new UserInputError("Message not found");
+
+        if (message.from !== username && message.to !== username) {
+          throw new ForbiddenError("Unauthorized");
+        }
+
+        let reaction = await Reaction.findOne({
+          where: {
+            messageId: message.id,
+            userId: user.id,
+          },
+        });
+
+        if (reaction) {
+          reaction.content = content;
+          await reaction.save();
+        } else {
+          reaction = await Reaction.create({
+            content,
+            messageId: message.id,
+            userId: user.id,
+          });
+        }
+
+        pubsub.publish("NEW_REACTION", { newReaction: reaction });
+
+        return reaction;
+      } catch (error) {
+        console.log(error);
+        throw error;
+      }
+    },
   },
   Subscription: {
     newMessage: {
@@ -72,6 +117,21 @@ module.exports = {
             parent.newMessage.from === user.username ||
             parent.newMessage.to === user.username
           ) {
+            return true;
+          }
+          return false;
+        }
+      ),
+    },
+    newReaction: {
+      subscribe: withFilter(
+        (_, __, { pubsub, user }) => {
+          if (!user) throw new AuthenticationError("Unauthenticated");
+          return pubsub.asyncIterator(["NEW_REACTION"]);
+        },
+        async (parent, _, { user }) => {
+          const message = await parent.newReaction.getMessage();
+          if (message.from === user.username || message.to === user.username) {
             return true;
           }
           return false;
